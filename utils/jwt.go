@@ -10,16 +10,16 @@ import (
 )
 
 type MyClaims struct {
-	Email string `json:"email"`
+	GoGoID uint64 `json:"go_go_id"`
 	jwt.StandardClaims
 }
 
 // GenerateToken  生成Token
-func GenerateToken(email string) (string, error) {
+func GenerateToken(goGoID uint64) (string, error) {
 	claims := &MyClaims{
-		Email: email,
+		GoGoID: goGoID,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),
+			ExpiresAt: time.Now().Add(5 * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			NotBefore: time.Now().Unix(),
 		},
@@ -28,38 +28,40 @@ func GenerateToken(email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	secret := os.Getenv("JWT_SECRET")
 	tokenString, err := token.SignedString([]byte(secret))
-	log.Println(err)
+	if err != nil {
+		return "", err
+	}
 	return tokenString, err
 }
 
 // ParseToken 解析token
-func ParseToken(tokenString string) (string, error) {
+func ParseToken(tokenString string) (uint64, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if claims, ok := token.Claims.(*MyClaims); ok && token.Valid {
-		return claims.Email, nil
+		return claims.GoGoID, nil
 	} else {
 		log.Println(err)
-		return "", err
+		return 0, err
 	}
 }
 
-func VerificationToken(ctx *gin.Context) string {
+func VerificationToken(ctx *gin.Context) uint64 {
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "没有找到Token",
 		})
-		return ""
+		return 0
 	}
 
-	account, err := ParseToken(authHeader)
+	ID, err := ParseToken(authHeader)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
-		return ""
+		return 0
 	}
-	return account
+	return ID
 }

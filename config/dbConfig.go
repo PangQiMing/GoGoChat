@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/PangQiMing/GoGoChat/entity"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,7 +31,7 @@ func InitDBConfig() {
 		panic("连接数据库失败")
 	}
 
-	err = db.AutoMigrate()
+	err = db.AutoMigrate(&entity.User{}, &entity.Friend{})
 	if err != nil {
 		panic(err)
 	}

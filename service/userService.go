@@ -8,12 +8,20 @@ import (
 	"github.com/mashingan/smapping"
 )
 
+// RegisterUser 注册用户
 func RegisterUser(registerUserDTO dto.RegisterUserDTO) error {
-	var user entity.User
-	err := smapping.FillStruct(&user, smapping.MapFields(&registerUserDTO))
+	//校验User字段
+	err := validateUserFieldIsEmpty(registerUserDTO)
 	if err != nil {
 		return err
 	}
+
+	var user entity.User
+	err = smapping.FillStruct(&user, smapping.MapFields(&registerUserDTO))
+	if err != nil {
+		return err
+	}
+	//创建User
 	result := config.DB.Create(&user)
 	if result.Error != nil {
 		return result.Error
@@ -21,11 +29,41 @@ func RegisterUser(registerUserDTO dto.RegisterUserDTO) error {
 	return nil
 }
 
+// Login 用户登录
 func Login(loginUserDTO dto.LoginUserDTO) error {
 	var count int64
-	config.DB.Model(entity.User{}).Where("email = ? AND password = ?", loginUserDTO.Email, loginUserDTO.Password).Count(&count)
+	config.DB.Model(entity.User{}).Where("go_go_id = ? AND password = ?", loginUserDTO.GoGoID, loginUserDTO.Password).Count(&count)
 	if count > 0 {
-
+		return nil
 	}
 	return errors.New("用户密码错误")
+}
+
+// GetUserInfo 获取用户个人信息
+func GetUserInfo(goGoID uint64) (entity.User, error) {
+	var user entity.User
+	tx := config.DB.Where("go_go_id= ?", goGoID).Take(&user)
+	return user, tx.Error
+}
+
+// UpdateUser 更新用户信息,
+func UpdateUser(goGoID uint64, updateUserDTO dto.UpdateUserDTO) error {
+	var user entity.User
+	err := smapping.FillStruct(&user, smapping.MapFields(&updateUserDTO))
+	if err != nil {
+		return err
+	}
+	tx := config.DB.Where("go_go_id = ?", goGoID).Updates(&user)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
+// 验证User字段是否为空
+func validateUserFieldIsEmpty(registerUserDTO dto.RegisterUserDTO) error {
+	if registerUserDTO.Password == "" || registerUserDTO.Nickname == "" {
+		return errors.New("昵称,邮箱,密码不能为空")
+	}
+	return nil
 }

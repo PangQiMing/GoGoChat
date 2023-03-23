@@ -20,3 +20,19 @@ func RequestMethodGet(ctx *gin.Context) {
 		return
 	}
 }
+
+// RequestMethodPut 请求方法Put
+func RequestMethodPut(ctx *gin.Context) {
+	if ctx.Request.Method != "PUT" {
+		ctx.Writer.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+// RequestMethodDelete 请求方法Delete
+func RequestMethodDelete(ctx *gin.Context) {
+	if ctx.Request.Method != "DELETE" {
+		ctx.Writer.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+}
