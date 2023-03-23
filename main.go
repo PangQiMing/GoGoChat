@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/PangQiMing/GoGoChat/config"
 	"github.com/PangQiMing/GoGoChat/controller"
+	"github.com/PangQiMing/GoGoChat/entity"
 	"github.com/PangQiMing/GoGoChat/middleware"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 func main() {
@@ -13,9 +13,14 @@ func main() {
 	r := gin.Default()
 	//初始化数据库
 	config.InitDBConfig()
+
+	//启动hub
+	hub := entity.NewHub()
+	go hub.Run()
+
 	//关闭数据库连接
 	defer config.CloseDBConnection(config.DB)
-
+	r.Use(middleware.CORSMiddleware())
 	r.POST("register", controller.RegisterUser) //注册用户
 	r.POST("login", controller.LoginUser)       //登录用户
 	userRouters := r.Group("/user", middleware.AuthorizeJWT())
@@ -34,9 +39,10 @@ func main() {
 		friendRouters.POST("reject", controller.RejectFriendRequest)       //拒绝好友请求
 		friendRouters.DELETE("delete", controller.DeleteFriend)            //删除好友
 	}
-
-	log.Println("GoGoChat服务启动中")
-	err := r.Run(":8080")
+	r.GET("/api/message/ws", func(ctx *gin.Context) {
+		controller.WSController(ctx, hub)
+	})
+	err := r.Run(":8081")
 	if err != nil {
 		panic("GoGoChat启动失败")
 	}
