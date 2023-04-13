@@ -42,7 +42,7 @@ func (h *Hub) Run() {
 		//广播消息
 		case message := <-h.Broadcast:
 			h.Lock.Lock()
-			fmt.Println("Broadcast:", message)
+			fmt.Printf("Broadcast: %v", message)
 			//遍历Clients注册表里的用户
 			for client := range h.Clients {
 				select {

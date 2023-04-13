@@ -39,7 +39,7 @@ func AddFriend(addFriendDTO dto.AddFriendDTO) error {
 // GetFriendRequestList 获取好友请求列表
 func GetFriendRequestList(goGoID uint64) ([]entity.Friend, error) {
 	var friendRequestList []entity.Friend
-	err := config.DB.Where("go_go_id = ? AND status = ?", goGoID, 0).Find(&friendRequestList).Error
+	err := config.DB.Preload("Friend").Where("go_go_id = ? AND status = ?", goGoID, 0).Find(&friendRequestList).Error
 	if err != nil {
 		return []entity.Friend{}, err
 	}
@@ -59,4 +59,14 @@ func RejectFriendRequest(rejectFriendDTO dto.RejectFriendDTO) error {
 // DeleteFriend 删除好友
 func DeleteFriend(deleteFriendDTO dto.DeleteFriendDTO) error {
 	return config.DB.Where("go_go_id = ? AND friend_id = ?", deleteFriendDTO.GoGoID, deleteFriendDTO.FriendID).Delete(&entity.Friend{}).Error
+}
+
+// SearchFriendByFriendID 查找好友是否存在
+func SearchFriendByFriendID(searchFriendDTO dto.SearchFriendDTO) (entity.User, error) {
+	var friend entity.User
+	err := config.DB.Where("go_go_id = ?", searchFriendDTO.FriendID).Take(&friend).Error
+	if err != nil {
+		return entity.User{}, err
+	}
+	return friend, nil
 }

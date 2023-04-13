@@ -53,7 +53,7 @@ func (c *Client) Write() {
 				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			fmt.Println("write: ", message)
+			fmt.Printf("write: %v", message)
 			err := c.Conn.WriteJSON(message)
 			if err != nil {
 				log.Println("error", err)

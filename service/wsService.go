@@ -30,12 +30,12 @@ func ServeWS(goGoID uint64, hub *entity.Hub, w http.ResponseWriter, r *http.Requ
 		Hun:     hub,
 	}
 
-	//msg := &entity.Message{
-	//	Avatar:   "00",
-	//	Nickname: "jack",
-	//	Content:  "hello",
-	//}
-	//client.SendMsg <- msg
+	msg := &entity.Message{
+		Avatar:   "00",
+		Nickname: "jack",
+		Content:  "hello",
+	}
+	client.SendMsg <- msg
 
 	hub.RegisterClient <- client
 	go client.Read()

@@ -120,3 +120,29 @@ func UpdateUser(ctx *gin.Context) {
 		"message": "用户信息已更新",
 	})
 }
+
+func UpdatePassword(ctx *gin.Context) {
+	utils.RequestMethodPut(ctx)
+	goGoID := utils.VerificationToken(ctx)
+	var updatePasswordDTO dto.UpdateUserPasswdDTO
+	err := ctx.ShouldBind(&updatePasswordDTO)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	updatePasswordDTO.GoGoID = goGoID
+	err = service.UpdateUserPasswd(updatePasswordDTO)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "修改密码成功",
+	})
+}

@@ -154,3 +154,30 @@ func DeleteFriend(ctx *gin.Context) {
 		"message": "删除好友成功",
 	})
 }
+
+// GetSearchFriend 获取好友信息，判断好友是否存在
+func GetSearchFriend(ctx *gin.Context) {
+	utils.RequestMethodGet(ctx)
+	_ = utils.VerificationToken(ctx)
+
+	var searchFriendDTO dto.SearchFriendDTO
+	err := ctx.ShouldBind(&searchFriendDTO)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	friend, err := service.SearchFriendByFriendID(searchFriendDTO)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": friend,
+	})
+}
