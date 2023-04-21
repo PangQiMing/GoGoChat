@@ -3,9 +3,10 @@ package main
 import (
 	"github.com/PangQiMing/GoGoChat/config"
 	"github.com/PangQiMing/GoGoChat/controller"
-	"github.com/PangQiMing/GoGoChat/entity"
 	"github.com/PangQiMing/GoGoChat/middleware"
+	"github.com/PangQiMing/GoGoChat/socket"
 	"github.com/gin-gonic/gin"
+	"log"
 )
 
 func main() {
@@ -18,8 +19,9 @@ func main() {
 	//设置static文件夹
 	r.Static("/images", "./static/images")
 
-	//启动hub
-	hub := entity.NewHub()
+	//启动ws服务
+	//hub := wsService.NewHub()
+	hub := socket.NewHub()
 	go hub.Run()
 
 	//关闭数据库连接
@@ -44,17 +46,15 @@ func main() {
 		friendRouters.POST("add", controller.AddFriend)                    //添加好友
 		friendRouters.POST("accept", controller.AcceptFriendRequest)       //同意好友请求
 		friendRouters.POST("reject", controller.RejectFriendRequest)       //拒绝好友请求
-		//删除好友未完成
-		friendRouters.DELETE("delete", controller.DeleteFriend) //删除好友
+		friendRouters.POST("delete", controller.DeleteFriend)              //删除好友
 	}
 
 	groupRouters := r.Group("/group", middleware.AuthorizeJWT())
 	{
-		groupRouters.POST("create", controller.CreateGroup) //创建群组
-		//更新群组未完成
-		groupRouters.PUT("update", controller.UpdateGroup) //更新群组信息
-		//解散群组未完成
-		groupRouters.DELETE("delete", controller.DeleteGroup)          //解散群组
+		groupRouters.POST("create", controller.CreateGroup)            //创建群组
+		groupRouters.PUT("update", controller.UpdateGroup)             //更新群组信息
+		groupRouters.POST("delete", controller.DeleteGroup)            //解散群组
+		groupRouters.POST("exit", controller.DeleteGroupMember)        //群成员退出群组
 		groupRouters.POST("search", controller.GetSearchGroup)         //获取群组信息
 		groupRouters.POST("join", controller.JoinGroup)                //加入群组
 		groupRouters.POST("accept", controller.AcceptJoinGroupRequest) //同意入群申请
@@ -62,8 +62,10 @@ func main() {
 		groupRouters.GET("", controller.GetGroupLists)                 //获取群组列表
 		groupRouters.GET("join-list", controller.JoinGroupRequestList) //获取入群申请列表
 	}
-	r.GET("/ws", func(ctx *gin.Context) {
-		controller.WSController(ctx, hub)
+	r.GET("ws", func(ctx *gin.Context) {
+		goGoID := ctx.Query("go_go_id")
+		log.Println(goGoID)
+		socket.ServeWs1(hub, goGoID, ctx.Writer, ctx.Request)
 	})
 	err := r.Run(":8081")
 	if err != nil {

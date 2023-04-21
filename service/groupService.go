@@ -47,7 +47,7 @@ func UpdateGroup(groupOwnerID uint64, updateGroupDTO dto.UpdateGroupDTO) error {
 	}
 	group.GroupOwnerID = groupOwnerID
 	group.MemberID = groupOwnerID
-	tx = config.DB.Updates(&group)
+	tx = config.DB.Where("group_id = ?", group.GroupID).Updates(&group)
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -66,20 +66,31 @@ func DeleteGroup(groupOwnerID uint64, deleteGroup dto.DeleteGroupDTO) error {
 	if count < 1 {
 		return errors.New("群组不存在或者你不是群主")
 	}
+
 	var group entity.Group
 	group.GroupID = deleteGroup.GroupID
 	group.GroupOwnerID = groupOwnerID
-	tx = config.DB.Where("group_id = ? AND group_owner_id = ?", deleteGroup.GroupID, groupOwnerID).Delete(&group)
+	tx = config.DB.Where("group_id = ? AND group_owner_id = ?", group.GroupID, group.GroupOwnerID).Delete(&group)
 	if tx.Error != nil {
 		return tx.Error
 	}
 	return nil
 }
 
+// DeleteGroupMember 群成员退出群组
+func DeleteGroupMember(memberDTO dto.DeleteGroupMemberDTO) error {
+	var group entity.Group
+	err := smapping.FillStruct(&group, smapping.MapFields(&memberDTO))
+	if err != nil {
+		return err
+	}
+	return config.DB.Where("group_id = ? AND member_id = ?", group.GroupID, memberDTO.MemberID).Delete(&group).Error
+}
+
 // GetGroupLists 获取群组列表
 func GetGroupLists(goGoID uint64) ([]entity.Group, error) {
 	var group []entity.Group
-	tx := config.DB.Where("group_owner_id = ? OR member_id = ? AND status = ?", goGoID, goGoID, 1).Find(&group)
+	tx := config.DB.Preload("Members").Where("member_id = ? AND status = ?", goGoID, 1).Find(&group)
 	if tx.Error != nil {
 		return []entity.Group{}, tx.Error
 	}
@@ -89,14 +100,14 @@ func GetGroupLists(goGoID uint64) ([]entity.Group, error) {
 // JoinGroupRequestList 获取入群的申请列表
 func JoinGroupRequestList(groupOwnerID uint64) ([]entity.Group, error) {
 	var group []entity.Group
-	tx := config.DB.Where("group_owner_id = ? AND status = 0", groupOwnerID).Find(&group)
+	tx := config.DB.Preload("Members").Where("group_owner_id = ? AND status = 0", groupOwnerID).Find(&group)
 	if tx.Error != nil {
 		return []entity.Group{}, tx.Error
 	}
 	return group, nil
 }
 
-// JoinGroup 加入群组
+// JoinGroup 申请加入群组
 func JoinGroup(joinGroupDTO dto.JoinGroupDTO) error {
 	var group entity.Group
 	err := smapping.FillStruct(&group, smapping.MapFields(&joinGroupDTO))
@@ -110,8 +121,16 @@ func JoinGroup(joinGroupDTO dto.JoinGroupDTO) error {
 		return errors.New("已发送加群请求或已是该群成员")
 	}
 
-	group.Status = 0
-	tx := config.DB.Create(&group)
+	var groupMember entity.Group
+	tx := config.DB.Model(&entity.Group{}).Where("group_id = ?", joinGroupDTO.GroupID).Take(&groupMember)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	groupMember.MemberID = joinGroupDTO.MemberID
+	groupMember.Status = 0
+	groupMember.ID = groupMember.ID + 1
+
+	tx = config.DB.Create(&groupMember)
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -119,23 +138,15 @@ func JoinGroup(joinGroupDTO dto.JoinGroupDTO) error {
 }
 
 // AcceptJoinGroupRequest 同意加入群组请求
-func AcceptJoinGroupRequest(groupOwnerID uint64, acceptJoinGroupDTO dto.AcceptJoinGroupDTO) error {
-	tx := config.DB.Model(&entity.Group{}).Where("group_id = ? AND group_owner_id = ? AND member_id = ? AND status = ?",
-		acceptJoinGroupDTO.GroupID, groupOwnerID, acceptJoinGroupDTO.MemberID, 0).Update("status", 1)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	return nil
+func AcceptJoinGroupRequest(acceptJoinGroupDTO dto.AcceptJoinGroupDTO) error {
+	return config.DB.Model(&entity.Group{}).Where("group_id = ? AND group_owner_id = ? AND member_id = ?",
+		acceptJoinGroupDTO.GroupID, acceptJoinGroupDTO.GroupOwnerID, acceptJoinGroupDTO.MemberID).Update("status", 1).Error
 }
 
 // RejectJoinGroupRequest 拒绝加入群组请求
 func RejectJoinGroupRequest(groupOwnerID uint64, rejectJoinGroupDTO dto.RejectJoinGroupDTO) error {
-	tx := config.DB.Model(&entity.Group{}).Where("group_id = ? AND group_owner_id = ? AND member_id = ? AND status = ?",
-		rejectJoinGroupDTO.GroupID, groupOwnerID, rejectJoinGroupDTO.MemberID, 0).Update("status", 2)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	return nil
+	return config.DB.Model(&entity.Group{}).Where("group_id = ? AND group_owner_id = ? AND member_id = ?",
+		rejectJoinGroupDTO.GroupID, groupOwnerID, rejectJoinGroupDTO.MemberID).Update("status", 2).Error
 }
 
 // GetSearchGroup 查找群组是否存在

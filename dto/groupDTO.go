@@ -17,13 +17,14 @@ type DeleteGroupDTO struct {
 
 type JoinGroupDTO struct {
 	GroupID      uint64 `json:"group_id"`
-	GroupOwnerID string `json:"group_owner_id"`
-	MemberID     uint64 `json:"member_id"`
+	GroupOwnerID uint64 `json:"group_owner_id"`
+	MemberID     uint64 `json:"-"`
 }
 
 type AcceptJoinGroupDTO struct {
-	GroupID  uint64 `json:"group_id"`
-	MemberID uint64 `json:"member_id"`
+	GroupID      uint64 `json:"group_id"`
+	GroupOwnerID uint64 `json:"-"`
+	MemberID     uint64 `json:"member_id"`
 }
 
 type RejectJoinGroupDTO struct {
@@ -33,4 +34,9 @@ type RejectJoinGroupDTO struct {
 
 type SearchGroupDTO struct {
 	GroupID string `json:"group_id"`
+}
+
+type DeleteGroupMemberDTO struct {
+	GroupID  string `json:"group_id"`
+	MemberID string `json:"member_id"`
 }

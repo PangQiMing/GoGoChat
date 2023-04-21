@@ -71,6 +71,7 @@ func DeleteGroup(ctx *gin.Context) {
 		})
 		return
 	}
+
 	err = service.DeleteGroup(goGoID, deleteGroupDTO)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -79,8 +80,34 @@ func DeleteGroup(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "解散群组成功",
+	})
+}
+
+// DeleteGroupMember 群成员退出群组
+func DeleteGroupMember(ctx *gin.Context) {
+	utils.RequestMethodDelete(ctx)
+	_ = utils.VerificationToken(ctx)
+	var deleteGroupMemberDTO dto.DeleteGroupMemberDTO
+	err := ctx.ShouldBind(&deleteGroupMemberDTO)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err = service.DeleteGroupMember(deleteGroupMemberDTO)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "退出改群组成功",
 	})
 }
 
@@ -160,7 +187,9 @@ func AcceptJoinGroupRequest(ctx *gin.Context) {
 		return
 	}
 
-	err = service.AcceptJoinGroupRequest(goGoID, acceptJoinGroupDTO)
+	acceptJoinGroupDTO.GroupOwnerID = goGoID
+
+	err = service.AcceptJoinGroupRequest(acceptJoinGroupDTO)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err,

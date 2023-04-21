@@ -5,6 +5,7 @@ import (
 	"github.com/PangQiMing/GoGoChat/config"
 	"github.com/PangQiMing/GoGoChat/dto"
 	"github.com/PangQiMing/GoGoChat/entity"
+	"log"
 )
 
 // GetFriendList 获取好友列表数据
@@ -28,8 +29,8 @@ func AddFriend(addFriendDTO dto.AddFriendDTO) error {
 
 	// 添加好友关系
 	friendList := entity.Friend{
-		GoGoID:   addFriendDTO.GoGoID,
-		FriendID: addFriendDTO.FriendID,
+		GoGoID:   addFriendDTO.FriendID,
+		FriendID: addFriendDTO.GoGoID,
 		Status:   0,
 		Remark:   "",
 	}
@@ -48,7 +49,15 @@ func GetFriendRequestList(goGoID uint64) ([]entity.Friend, error) {
 
 // AcceptFriendRequest 同意好友请求，设置好友关系状态 Status = 1
 func AcceptFriendRequest(acceptFriendDTO dto.AcceptFriendDTO) error {
-	return config.DB.Model(&entity.Friend{}).Where("go_go_id = ? AND friend_id = ?", acceptFriendDTO.GoGoID, acceptFriendDTO.FriendID).Update("status", 1).Error
+	log.Println(acceptFriendDTO.GoGoID)
+	log.Println(acceptFriendDTO.FriendID)
+	oneself := entity.Friend{
+		GoGoID:   acceptFriendDTO.FriendID,
+		FriendID: acceptFriendDTO.GoGoID,
+		Status:   1,
+		Remark:   "",
+	}
+	return config.DB.Model(&entity.Friend{}).Create(&oneself).Where("go_go_id = ? AND friend_id = ?", acceptFriendDTO.GoGoID, acceptFriendDTO.FriendID).Update("status", 1).Error
 }
 
 // RejectFriendRequest 拒绝好友请求,设置好友关系状态 status = 2

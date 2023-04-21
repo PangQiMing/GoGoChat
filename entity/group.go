@@ -13,5 +13,5 @@ type Group struct {
 	GroupOwnerID uint64 `gorm:"not null" json:"group_owner_id"`        //群主ID
 	MemberID     uint64 `gorm:"not null" json:"member_id"`             //群组成员ID
 	Status       uint   `gorm:"not null" json:"status"`                //加入群组状态，0待处理，1同意，2拒绝
-	Members      User   `gorm:"foreignKey:MemberID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Members      User   `gorm:"foreignKey:MemberID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"members"`
 }
