@@ -31,6 +31,7 @@ func RegisterUser(registerUserDTO dto.RegisterUserDTO) error {
 	user.Password = hashPasswd
 
 	//创建User
+	user.AvatarURL = "images/default.jpg"
 	result := config.DB.Create(&user)
 	if result.Error != nil {
 		return result.Error
@@ -102,6 +103,10 @@ func UpdateUserPasswd(updateUserPasswd dto.UpdateUserPasswdDTO) error {
 		return errors.New("旧密码不正确")
 	}
 	return nil
+}
+
+func UpdateAvatar(goGoID uint64, imgUrl string) error {
+	return config.DB.Model(&entity.User{}).Where("go_go_id = ?", goGoID).Update("avatar_url", imgUrl).Error
 }
 
 // 验证User字段是否为空

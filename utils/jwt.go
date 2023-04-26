@@ -50,7 +50,7 @@ func ParseToken(tokenString string) (uint64, error) {
 func VerificationToken(ctx *gin.Context) uint64 {
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"message": "没有找到Token",
 		})
 		return 0
@@ -58,7 +58,7 @@ func VerificationToken(ctx *gin.Context) uint64 {
 
 	ID, err := ParseToken(authHeader)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"error": err.Error(),
 		})
 		return 0

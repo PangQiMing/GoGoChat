@@ -34,8 +34,9 @@ func main() {
 	{
 		userRouters.GET("", controller.GetUserInfo)                   //获取用户个人信息
 		userRouters.POST("logout", controller.LogoutUser)             //退出登录
-		userRouters.PUT("update-user", controller.UpdateUser)         //更新用户信息：如头像，昵称，性别，年龄
+		userRouters.PUT("update-user", controller.UpdateUser)         //更新用户信息：昵称，性别，年龄
 		userRouters.PUT("update-password", controller.UpdatePassword) //更新用户密码
+		userRouters.POST("update-avatar", controller.UpdateAvatar)    //更新用户头像
 	}
 
 	friendRouters := r.Group("/friend", middleware.AuthorizeJWT())

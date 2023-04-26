@@ -5,6 +5,8 @@ import (
 	"github.com/PangQiMing/GoGoChat/service"
 	"github.com/PangQiMing/GoGoChat/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -144,5 +146,49 @@ func UpdatePassword(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "修改密码成功",
+	})
+}
+
+func UpdateAvatar(ctx *gin.Context) {
+	utils.RequestMethodPost(ctx)
+	goGoID := utils.VerificationToken(ctx)
+	file, _, err := ctx.Request.FormFile("file")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "更新头像失败",
+		})
+		return
+	}
+
+	fileData, err := ioutil.ReadAll(file)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "更新头像失败",
+		})
+		return
+	}
+
+	//为图片文件生成uuid唯一标识
+	fileStr := uuid.New().String()
+
+	basePath := "static/"
+	imgPath := "images/" + fileStr + ".jpg"
+	savePath := basePath + imgPath
+	err = ioutil.WriteFile(savePath, fileData, 0666)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "更新头像失败",
+		})
+		return
+	}
+	err = service.UpdateAvatar(goGoID, imgPath)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "更新头像失败",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "更新头像成功",
 	})
 }
