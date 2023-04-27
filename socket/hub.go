@@ -1,7 +1,9 @@
 package socket
 
 import (
+	"github.com/PangQiMing/GoGoChat/service"
 	"log"
+	"strconv"
 )
 
 type Message struct {
@@ -48,13 +50,6 @@ func (h *Hub) Run() {
 			}
 		case message := <-h.broadcast:
 			log.Println(message)
-			//var msg Message
-			//err := json.Unmarshal(message, &msg)
-			//if err != nil {
-			//	log.Println(err.Error())
-			//	return
-			//}
-
 			if message.MessageType == "private" {
 				if localClient, ok := h.onlineClients[message.From]; ok {
 					localClient.send <- message
@@ -64,6 +59,15 @@ func (h *Hub) Run() {
 				} else {
 					log.Println("该用户不在线")
 				}
+			} else if message.MessageType == "public" {
+				groups := service.GetGroupMemberByToId(message.To)
+
+				for _, member := range groups {
+					if memberClient, ok := h.onlineClients[strconv.FormatUint(member.MemberID, 10)]; ok {
+						memberClient.send <- message
+					}
+				}
+				//log.Println(groups)
 			}
 		}
 	}

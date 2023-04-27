@@ -17,6 +17,7 @@ func CreateGroup(groupOwnerID uint64, createGroupDTO dto.CreateGroupDTO) error {
 		return err
 	}
 	group.GroupID = uint64(uuid.New().ID())
+	group.Avatar = "images/defaultGroup.jpg"
 	group.GroupOwnerID = groupOwnerID
 	group.MemberID = groupOwnerID
 	group.Status = 1
@@ -157,4 +158,10 @@ func GetSearchGroup(searchGroupDTO dto.SearchGroupDTO) (entity.Group, error) {
 		return entity.Group{}, tx.Error
 	}
 	return group, nil
+}
+
+func GetGroupMemberByToId(groupID string) []entity.Group {
+	var group []entity.Group
+	config.DB.Where("group_id = ?", groupID).Find(&group)
+	return group
 }
