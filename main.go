@@ -33,7 +33,6 @@ func main() {
 	userRouters := r.Group("/user", middleware.AuthorizeJWT())
 	{
 		userRouters.GET("", controller.GetUserInfo)                   //获取用户个人信息
-		userRouters.POST("logout", controller.LogoutUser)             //退出登录
 		userRouters.PUT("update-user", controller.UpdateUser)         //更新用户信息：昵称，性别，年龄
 		userRouters.PUT("update-password", controller.UpdatePassword) //更新用户密码
 		userRouters.POST("update-avatar", controller.UpdateAvatar)    //更新用户头像
@@ -63,6 +62,14 @@ func main() {
 		groupRouters.GET("", controller.GetGroupLists)                 //获取群组列表
 		groupRouters.GET("join-list", controller.JoinGroupRequestList) //获取入群申请列表
 	}
+
+	circleRouters := r.Group("/friend-circle", middleware.AuthorizeJWT())
+	{
+		circleRouters.POST("add", controller.CreateFriendCircle)
+		circleRouters.DELETE("delete", controller.DeleteFriendCircle)
+		circleRouters.GET("", controller.GetFriendCircleAll)
+	}
+
 	r.GET("ws", func(ctx *gin.Context) {
 		goGoID := ctx.Query("go_go_id")
 		log.Println(goGoID)

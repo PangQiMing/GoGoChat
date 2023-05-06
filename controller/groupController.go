@@ -88,7 +88,7 @@ func DeleteGroup(ctx *gin.Context) {
 // DeleteGroupMember 群成员退出群组
 func DeleteGroupMember(ctx *gin.Context) {
 	utils.RequestMethodDelete(ctx)
-	_ = utils.VerificationToken(ctx)
+	memberID := utils.VerificationToken(ctx)
 	var deleteGroupMemberDTO dto.DeleteGroupMemberDTO
 	err := ctx.ShouldBind(&deleteGroupMemberDTO)
 	if err != nil {
@@ -98,7 +98,7 @@ func DeleteGroupMember(ctx *gin.Context) {
 		return
 	}
 
-	err = service.DeleteGroupMember(deleteGroupMemberDTO)
+	err = service.DeleteGroupMember(memberID, deleteGroupMemberDTO)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -107,7 +107,7 @@ func DeleteGroupMember(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "退出改群组成功",
+		"message": "已退出该群组",
 	})
 }
 

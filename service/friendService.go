@@ -22,7 +22,8 @@ func GetFriendList(goGoID uint64) ([]entity.Friend, error) {
 func AddFriend(addFriendDTO dto.AddFriendDTO) error {
 	// 检查好友关系是否已存在
 	var count int64
-	config.DB.Model(&entity.Friend{}).Where("go_go_id = ? AND friend_id = ?", addFriendDTO.GoGoID, addFriendDTO.FriendID).Count(&count)
+	config.DB.Model(&entity.Friend{}).Where("go_go_id = ? AND friend_id = ?", addFriendDTO.FriendID, addFriendDTO.GoGoID).Count(&count)
+	log.Println(count)
 	if count > 0 {
 		return errors.New("好友关系已存在")
 	}
@@ -49,8 +50,15 @@ func GetFriendRequestList(goGoID uint64) ([]entity.Friend, error) {
 
 // AcceptFriendRequest 同意好友请求，设置好友关系状态 Status = 1
 func AcceptFriendRequest(acceptFriendDTO dto.AcceptFriendDTO) error {
-	log.Println(acceptFriendDTO.GoGoID)
-	log.Println(acceptFriendDTO.FriendID)
+	//log.Println(acceptFriendDTO.GoGoID)
+	//log.Println(acceptFriendDTO.FriendID)
+	// 检查好友关系是否已存在
+	var count int64
+	config.DB.Model(&entity.Friend{}).Where("go_go_id = ? AND friend_id = ? AND status=1", acceptFriendDTO.GoGoID, acceptFriendDTO.FriendID).Count(&count)
+	log.Println(count)
+	if count > 0 {
+		return errors.New("已同意")
+	}
 	oneself := entity.Friend{
 		GoGoID:   acceptFriendDTO.FriendID,
 		FriendID: acceptFriendDTO.GoGoID,
@@ -60,14 +68,15 @@ func AcceptFriendRequest(acceptFriendDTO dto.AcceptFriendDTO) error {
 	return config.DB.Model(&entity.Friend{}).Create(&oneself).Where("go_go_id = ? AND friend_id = ?", acceptFriendDTO.GoGoID, acceptFriendDTO.FriendID).Update("status", 1).Error
 }
 
-// RejectFriendRequest 拒绝好友请求,设置好友关系状态 status = 2
+// RejectFriendRequest 拒绝好友请求,并删除好友关系状态
 func RejectFriendRequest(rejectFriendDTO dto.RejectFriendDTO) error {
-	return config.DB.Model(&entity.Friend{}).Where("go_go_id = ? AND friend_id = ?", rejectFriendDTO.GoGoID, rejectFriendDTO.FriendID).Update("status", 2).Error
+	return config.DB.Where("go_go_id = ? AND friend_id = ?", rejectFriendDTO.GoGoID, rejectFriendDTO.FriendID).Delete(&entity.Friend{}).Error
 }
 
 // DeleteFriend 删除好友
 func DeleteFriend(deleteFriendDTO dto.DeleteFriendDTO) error {
-	return config.DB.Where("go_go_id = ? AND friend_id = ?", deleteFriendDTO.GoGoID, deleteFriendDTO.FriendID).Delete(&entity.Friend{}).Error
+	config.DB.Where("go_go_id = ? AND friend_id = ?", deleteFriendDTO.GoGoID, deleteFriendDTO.FriendID).Delete(&entity.Friend{})
+	return config.DB.Where("go_go_id = ? AND friend_id = ?", deleteFriendDTO.FriendID, deleteFriendDTO.GoGoID).Delete(&entity.Friend{}).Error
 }
 
 // SearchFriendByFriendID 查找好友是否存在

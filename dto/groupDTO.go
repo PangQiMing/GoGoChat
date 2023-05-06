@@ -37,6 +37,5 @@ type SearchGroupDTO struct {
 }
 
 type DeleteGroupMemberDTO struct {
-	GroupID  string `json:"group_id"`
-	MemberID string `json:"member_id"`
+	GroupID string `json:"group_id"`
 }

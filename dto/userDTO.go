@@ -17,7 +17,7 @@ type UpdateUserDTO struct {
 	Nickname     string `json:"nickname"`
 	Sex          string `json:"sex"`
 	Age          string `json:"age"`
-	introduction string `json:"introduction"`
+	Introduction string `json:"introduction"`
 }
 
 type UpdateUserPasswdDTO struct {

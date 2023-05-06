@@ -79,13 +79,8 @@ func DeleteGroup(groupOwnerID uint64, deleteGroup dto.DeleteGroupDTO) error {
 }
 
 // DeleteGroupMember 群成员退出群组
-func DeleteGroupMember(memberDTO dto.DeleteGroupMemberDTO) error {
-	var group entity.Group
-	err := smapping.FillStruct(&group, smapping.MapFields(&memberDTO))
-	if err != nil {
-		return err
-	}
-	return config.DB.Where("group_id = ? AND member_id = ?", group.GroupID, memberDTO.MemberID).Delete(&group).Error
+func DeleteGroupMember(memberID uint64, memberDTO dto.DeleteGroupMemberDTO) error {
+	return config.DB.Where("group_id = ? AND member_id = ?", memberDTO.GroupID, memberID).Delete(&entity.Group{}).Error
 }
 
 // GetGroupLists 获取群组列表
@@ -122,16 +117,22 @@ func JoinGroup(joinGroupDTO dto.JoinGroupDTO) error {
 		return errors.New("已发送加群请求或已是该群成员")
 	}
 
-	var groupMember entity.Group
-	tx := config.DB.Model(&entity.Group{}).Where("group_id = ?", joinGroupDTO.GroupID).Take(&groupMember)
+	var groupInfo entity.Group
+	tx := config.DB.Model(&entity.Group{}).Where("group_id = ?", joinGroupDTO.GroupID).Take(&groupInfo)
 	if tx.Error != nil {
 		return tx.Error
 	}
-	groupMember.MemberID = joinGroupDTO.MemberID
-	groupMember.Status = 0
-	groupMember.ID = groupMember.ID + 1
 
-	tx = config.DB.Create(&groupMember)
+	var joinGroup entity.Group
+	joinGroup.GroupID = groupInfo.GroupID
+	joinGroup.Avatar = groupInfo.Avatar
+	joinGroup.Name = groupInfo.Name
+	joinGroup.Announcement = groupInfo.Announcement
+	joinGroup.GroupOwnerID = groupInfo.GroupOwnerID
+	joinGroup.MemberID = joinGroupDTO.MemberID
+	joinGroup.Status = 0
+
+	tx = config.DB.Create(&joinGroup)
 	if tx.Error != nil {
 		return tx.Error
 	}

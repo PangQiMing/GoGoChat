@@ -13,6 +13,7 @@ type Message struct {
 	To           string `json:"to"`
 	Content      string `json:"content"`
 	MessageType  string `json:"message_type"`
+	Time         string `json:"time"`
 }
 
 type Hub struct {

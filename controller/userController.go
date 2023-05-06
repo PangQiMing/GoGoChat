@@ -85,16 +85,6 @@ func GetUserInfo(ctx *gin.Context) {
 	})
 }
 
-// LogoutUser 用户退出操作
-func LogoutUser(ctx *gin.Context) {
-	utils.RequestMethodPost(ctx)
-	_ = utils.VerificationToken(ctx)
-	ctx.Redirect(http.StatusSeeOther, "/")
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "用户已退出",
-	})
-}
-
 // UpdateUser 更新用户信息：头像，性别，年龄
 func UpdateUser(ctx *gin.Context) {
 	utils.RequestMethodPut(ctx)
