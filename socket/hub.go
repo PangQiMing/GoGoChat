@@ -1,27 +1,18 @@
 package socket
 
 import (
+	"github.com/PangQiMing/GoGoChat/entity"
 	"github.com/PangQiMing/GoGoChat/service"
 	"log"
 	"strconv"
 )
-
-type Message struct {
-	Avatar       string `json:"avatar"`
-	FromUsername string `json:"from_username"`
-	From         string `json:"from"`
-	To           string `json:"to"`
-	Content      string `json:"content"`
-	MessageType  string `json:"message_type"`
-	Time         string `json:"time"`
-}
 
 type Hub struct {
 	// Registered onlineClients.
 	onlineClients map[string]*Client
 
 	// Inbound messages from the onlineClients.
-	broadcast chan Message
+	broadcast chan entity.Message
 
 	// Register requests from the onlineClients.
 	register chan *Client
@@ -32,7 +23,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		broadcast:     make(chan Message),
+		broadcast:     make(chan entity.Message),
 		register:      make(chan *Client),
 		unregister:    make(chan *Client),
 		onlineClients: make(map[string]*Client),
@@ -52,6 +43,10 @@ func (h *Hub) Run() {
 		case message := <-h.broadcast:
 			log.Println(message)
 			if message.MessageType == "private" {
+				err := service.SaveMessage(message)
+				if err != nil {
+					continue
+				}
 				if localClient, ok := h.onlineClients[message.From]; ok {
 					localClient.send <- message
 					if client, ok := h.onlineClients[message.To]; ok {
@@ -62,7 +57,10 @@ func (h *Hub) Run() {
 				}
 			} else if message.MessageType == "public" {
 				groups := service.GetGroupMemberByToId(message.To)
-
+				err := service.SaveMessage(message)
+				if err != nil {
+					continue
+				}
 				for _, member := range groups {
 					if memberClient, ok := h.onlineClients[strconv.FormatUint(member.MemberID, 10)]; ok {
 						memberClient.send <- message

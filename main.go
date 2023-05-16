@@ -20,7 +20,6 @@ func main() {
 	r.Static("/images", "./static/images")
 
 	//启动ws服务
-	//hub := wsService.NewHub()
 	hub := socket.NewHub()
 	go hub.Run()
 
@@ -36,6 +35,7 @@ func main() {
 		userRouters.PUT("update-user", controller.UpdateUser)         //更新用户信息：昵称，性别，年龄
 		userRouters.PUT("update-password", controller.UpdatePassword) //更新用户密码
 		userRouters.POST("update-avatar", controller.UpdateAvatar)    //更新用户头像
+		userRouters.GET("get-message", controller.GetMessageByGoGoID) //获取聊天记录
 	}
 
 	friendRouters := r.Group("/friend", middleware.AuthorizeJWT())

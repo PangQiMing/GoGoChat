@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"github.com/PangQiMing/GoGoChat/entity"
 	"log"
 	"net/http"
 )
@@ -12,7 +13,7 @@ func ServeWs1(hub *Hub, goGoID string, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &Client{hub: hub, conn: conn, send: make(chan Message), goGoID: goGoID}
+	client := &Client{hub: hub, conn: conn, send: make(chan entity.Message), goGoID: goGoID}
 	client.hub.register <- client
 
 	go client.writePump()

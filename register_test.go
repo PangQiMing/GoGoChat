@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 	"testing"
@@ -22,11 +23,26 @@ type RegisterUserDTO struct {
 
 func BenchmarkRegister_test(b *testing.B) {
 	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go worker(&wg)
+
+	wg.Wait()
+	fmt.Println("All done!")
+}
+func worker(wg *sync.WaitGroup) {
+	for i := 0; i < 100000; i++ {
+		testRegister()
+	}
+	wg.Done()
+}
+func testRegister() {
 	client := &http.Client{}
 	url := "http://localhost:8081/register"
+	rand.Seed(time.Now().UnixNano())
 	registerUser := RegisterUserDTO{
-		GoGoID:   123456121,
-		Nickname: "测试88",
+		GoGoID:   uint64(rand.Int63n(100000000)),
+		Nickname: "测试" + fmt.Sprint(rand.Int63n(100000000)),
 		Password: "123456",
 		Sex:      "男",
 		Age:      "20",
@@ -37,25 +53,15 @@ func BenchmarkRegister_test(b *testing.B) {
 		log.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	startTime := time.Now()
-	for i := 0; i < 100; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer resp.Body.Close()
-
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(string(body))
-		}()
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
 	}
-	wg.Wait()
-	elapsed := time.Since(startTime)
-	log.Printf("100 requests took %v seconds", elapsed.Seconds())
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(body))
 }

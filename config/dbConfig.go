@@ -31,7 +31,7 @@ func InitDBConfig() {
 		panic("连接数据库失败")
 	}
 	//自动创建表
-	err = db.AutoMigrate(&entity.User{}, &entity.Friend{}, &entity.Group{})
+	err = db.AutoMigrate(&entity.User{}, &entity.Friend{}, &entity.Group{}, &entity.Message{})
 	if err != nil {
 		panic(err)
 	}
